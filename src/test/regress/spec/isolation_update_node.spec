@@ -9,7 +9,7 @@ setup
 teardown
 {
     SELECT master_remove_node(nodename, nodeport) FROM pg_dist_node;
-    SELECT nodeid, nodename, nodeport from pg_dist_node;
+    SELECT nodeid, nodename, nodeport from pg_dist_node ORDER BY 1 DESC;
 }
 
 session "s1"

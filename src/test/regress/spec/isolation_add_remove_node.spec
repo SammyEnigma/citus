@@ -1,6 +1,10 @@
 setup
 {
 	SELECT 1;
+	CREATE OR REPLACE FUNCTION public.wait_until_metadata_sync(timeout INTEGER DEFAULT 15000)
+    RETURNS void
+    LANGUAGE C STRICT
+    AS 'citus';
 }
 
 teardown
@@ -38,6 +42,7 @@ step "s1-activate-node-1"
 step "s1-disable-node-1"
 {
 	SELECT 1 FROM master_disable_node('localhost', 57637);
+	SELECT public.wait_until_metadata_sync();
 }
 
 step "s1-remove-node-1"
@@ -80,6 +85,7 @@ step "s2-activate-node-1"
 step "s2-disable-node-1"
 {
 	SELECT 1 FROM master_disable_node('localhost', 57637);
+	SELECT public.wait_until_metadata_sync();
 }
 
 step "s2-remove-node-1"

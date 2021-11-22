@@ -94,8 +94,14 @@ SELECT count(*) FROM pg_dist_placement WHERE groupid = :worker_2_group;
 (1 row)
 
 -- make sure when we disable a secondary we don't remove any placements
-SELECT master_disable_node('localhost', 9001);
- master_disable_node
+SELECT citus_disable_node('localhost', 9001);
+ citus_disable_node
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT public.wait_until_metadata_sync();
+ wait_until_metadata_sync
 ---------------------------------------------------------------------
 
 (1 row)
@@ -254,8 +260,14 @@ SELECT 1 FROM master_add_node('localhost', :worker_2_port);
 (1 row)
 
 -- try to disable the node before removing it (this used to crash)
-SELECT master_disable_node('localhost', :worker_2_port);
- master_disable_node
+SELECT citus_disable_node('localhost', :worker_2_port);
+ citus_disable_node
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT public.wait_until_metadata_sync();
+ wait_until_metadata_sync
 ---------------------------------------------------------------------
 
 (1 row)
@@ -923,8 +935,8 @@ SELECT 1 FROM master_add_node('localhost', :worker_2_port);
         1
 (1 row)
 
--- test with master_disable_node
--- status before master_disable_node
+-- test with citus_disable_node_and_wait
+-- status before citus_disable_node_and_wait
 SELECT COUNT(*) FROM pg_dist_node WHERE nodeport = :worker_2_port;
  count
 ---------------------------------------------------------------------
@@ -973,13 +985,19 @@ ORDER BY shardid ASC;
 (0 rows)
 
 \c - - - :master_port
-SELECT master_disable_node('localhost', :worker_2_port);
- master_disable_node
+SELECT citus_disable_node('localhost', :worker_2_port);
+ citus_disable_node
 ---------------------------------------------------------------------
 
 (1 row)
 
--- status after master_disable_node
+SELECT public.wait_until_metadata_sync();
+ wait_until_metadata_sync
+---------------------------------------------------------------------
+
+(1 row)
+
+-- status after citus_disable_node_and_wait
 SELECT COUNT(*) FROM pg_dist_node WHERE nodeport = :worker_2_port;
  count
 ---------------------------------------------------------------------

@@ -428,22 +428,64 @@ citus_disable_node(PG_FUNCTION_ARGS)
 {
 	text *nodeNameText = PG_GETARG_TEXT_P(0);
 	int32 nodePort = PG_GETARG_INT32(1);
+	bool forceDisableNode = PG_GETARG_BOOL(2);
+
 	char *nodeName = text_to_cstring(nodeNameText);
 	WorkerNode *workerNode = ModifiableWorkerNode(nodeName, nodePort);
-	bool isActive = false;
-	bool onlyConsiderActivePlacements = false;
 	MemoryContext savedContext = CurrentMemoryContext;
 
 	PG_TRY();
 	{
-		if (NodeIsPrimary(workerNode))
+		WorkerNode *firstWorkerNode = GetFirstPrimaryWorkerNode();
+		if (!forceDisableNode && firstWorkerNode &&
+			firstWorkerNode->nodeId == workerNode->nodeId)
 		{
 			/*
-			 * Delete reference table placements so they are not taken into account
-			 * for the check if there are placements after this.
+			 * We sync metadata async and optionally in the background worker,
+			 * it would mean that some nodes might get the updates while other
+			 * not. And, if the node metadata that is changing is the first
+			 * worker node, the problem gets nasty. We serialize modifications
+			 * to replicated tables by acquiring locks on the first worker node.
+			 *
+			 * If some nodes get the metadata changes and some do not, they'd be
+			 * acquiring the locks on different nodes. Hence, having the
+			 * possibility of diverged shard placements for the same shard.
+			 *
+			 * To prevent that, we currently do not allow disabling the first
+			 * worker node.
 			 */
-			DeleteAllReferenceTablePlacementsFromNodeGroup(workerNode->groupId);
+			ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+							errmsg("disabling the first worker node in the "
+								   "metadata is not allowed")));
+		}
 
+		/*
+		 * First, locally mark the node as inactive. We'll later trigger background
+		 * worker to sync the metadata changes to the relevant nodes.
+		 */
+		bool isActive = false;
+		workerNode =
+			SetWorkerColumnLocalOnly(workerNode,
+									 Anum_pg_dist_node_isactive,
+									 BoolGetDatum(isActive));
+		if (NodeIsPrimary(workerNode))
+		{
+			ErrorIfCoordinatorMetadataSetFalse(workerNode, BoolGetDatum(isActive),
+											   "isactive");
+
+			if (!forceDisableNode)
+			{
+				/*
+				 * We do not allow disabling nodes if it contains any
+				 * primary placement. This decision can be overriden by
+				 * the user such as when the node is down and there is no
+				 * other way.
+				 */
+				ErrorIfNodeContainsNonRemovablePlacements(workerNode);
+			}
+
+
+			bool onlyConsiderActivePlacements = false;
 			if (NodeGroupHasShardPlacements(workerNode->groupId,
 											onlyConsiderActivePlacements))
 			{
@@ -456,10 +498,25 @@ citus_disable_node(PG_FUNCTION_ARGS)
 									 workerNode->workerName,
 									 nodePort)));
 			}
+
+			/*
+			 * Delete replicated table placements from the coordinator's metadata,
+			 * but not remotely. That is because one more more of the remote
+			 * nodes might be down. Instead, we let the background worker
+			 * to sync the metadata when possible.
+			 */
+			bool forceRemoteDelete = false;
+			DeleteAllReplicatedTablePlacementsFromNodeGroup(workerNode->groupId,
+															forceRemoteDelete);
 		}
 
-		SetNodeState(nodeName, nodePort, isActive);
 		TransactionModifiedNodeMetadata = true;
+
+		/* all the active nodes should get the metadata updates */
+		if (UnsetMetadataSyncedForAll())
+		{
+			TriggerMetadataSyncOnCommit();
+		}
 	}
 	PG_CATCH();
 	{
@@ -467,27 +524,59 @@ citus_disable_node(PG_FUNCTION_ARGS)
 		MemoryContextSwitchTo(savedContext);
 		ErrorData *edata = CopyErrorData();
 
-		if (ClusterHasKnownMetadataWorkers())
-		{
-			ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
-							errmsg("Disabling %s:%d failed", workerNode->workerName,
-								   nodePort),
-							errdetail("%s", edata->message),
-							errhint(
-								"If you are using MX, try stop_metadata_sync_to_node(hostname, port) "
-								"for nodes that are down before disabling them.")));
-		}
-		else
-		{
-			ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
-							errmsg("Disabling %s:%d failed", workerNode->workerName,
-								   nodePort),
-							errdetail("%s", edata->message)));
-		}
+		ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+						errmsg("disabling %s:%d failed", workerNode->workerName,
+							   nodePort),
+						errdetail("%s", edata->message),
+						errhint("You can force disabling node, but this operation "
+								"might cause data loss: SELECT "
+								"citus_disable_node('%s', %d, force:=true);",
+								workerNode->workerName, nodePort)));
 	}
 	PG_END_TRY();
 
 	PG_RETURN_VOID();
+}
+
+
+/*
+ * TriggerSyncMetadataToPrimaryNodes iterates over the active primary nodes,
+ * and triggers the metadata syncs if the node has not the metadata. Later,
+ * maintenance daemon will sync the metadata to nodes.
+ */
+void
+TriggerSyncMetadataToPrimaryNodes(void)
+{
+	List *workerList = ActivePrimaryNonCoordinatorNodeList(ShareLock);
+	bool triggerMetadataSync = false;
+
+	WorkerNode *workerNode = NULL;
+	foreach_ptr(workerNode, workerList)
+	{
+		/* if already has metadata, no need to do it again */
+		if (!workerNode->hasMetadata)
+		{
+			/*
+			 * Let the maintanince deamon do the hard work of syncing the metadata. We prefer
+			 * this because otherwise node activation might fail withing transaction blocks.
+			 */
+			LockRelationOid(DistNodeRelationId(), ExclusiveLock);
+			SetWorkerColumnLocalOnly(workerNode, Anum_pg_dist_node_hasmetadata,
+									 BoolGetDatum(true));
+
+			triggerMetadataSync = true;
+		}
+		else if (!workerNode->metadataSynced)
+		{
+			triggerMetadataSync = true;
+		}
+	}
+
+	/* let the maintanince deamon know about the metadata sync */
+	if (triggerMetadataSync)
+	{
+		TriggerMetadataSyncOnCommit();
+	}
 }
 
 
@@ -836,14 +925,42 @@ ActivateNode(char *nodeName, int nodePort)
 	/* take an exclusive lock on pg_dist_node to serialize pg_dist_node changes */
 	LockRelationOid(DistNodeRelationId(), ExclusiveLock);
 
-	WorkerNode *newWorkerNode = SetNodeState(nodeName, nodePort, isActive);
+	/*
+	 * First, locally mark the node is active, if everything goes well,
+	 * we are going to sync this information to all the metadata nodes.
+	 */
+	WorkerNode *workerNode = FindWorkerNodeAnyCluster(nodeName, nodePort);
+	if (workerNode == NULL)
+	{
+		ereport(ERROR, (errmsg("node at \"%s:%u\" does not exist", nodeName, nodePort)));
+	}
 
-	SetUpDistributedTableDependencies(newWorkerNode);
+	workerNode =
+		SetWorkerColumnLocalOnly(workerNode, Anum_pg_dist_node_isactive,
+								 BoolGetDatum(isActive));
+	bool syncMetadata =
+		EnableMetadataSyncByDefault && NodeIsPrimary(workerNode);
 
-	if (EnableMetadataSyncByDefault && NodeIsPrimary(newWorkerNode))
+	if (syncMetadata)
+	{
+		/*
+		 * We are going to sync the metadata anyway in this transaction, so do
+		 * not fail just because the current metadata is not synced.
+		 */
+		SetWorkerColumn(workerNode, Anum_pg_dist_node_metadatasynced,
+						BoolGetDatum(isActive));
+	}
+
+	SetUpDistributedTableDependencies(workerNode);
+
+	if (syncMetadata)
 	{
 		StartMetadataSyncToNode(nodeName, nodePort);
 	}
+
+	/* finally, let all other active metadata nodes to learn about this change */
+	WorkerNode *newWorkerNode = SetNodeState(nodeName, nodePort, isActive);
+	Assert(newWorkerNode->nodeId == workerNode->nodeId);
 
 	return newWorkerNode->nodeId;
 }
@@ -1303,7 +1420,9 @@ RemoveNodeFromCluster(char *nodeName, int32 nodePort)
 		 * Delete reference table placements so they are not taken into account
 		 * for the check if there are placements after this.
 		 */
-		DeleteAllReferenceTablePlacementsFromNodeGroup(workerNode->groupId);
+		bool forceRemoteDelete = true;
+		DeleteAllReplicatedTablePlacementsFromNodeGroup(workerNode->groupId,
+														forceRemoteDelete);
 
 		/*
 		 * Secondary nodes are read-only, never 2PC is used.
@@ -2273,6 +2392,7 @@ UnsetMetadataSyncedForAll(void)
 	systable_endscan(scanDescriptor);
 	CatalogCloseIndexes(indstate);
 	table_close(relation, NoLock);
+	CommandCounterIncrement();
 
 	return updatedAtLeastOne;
 }

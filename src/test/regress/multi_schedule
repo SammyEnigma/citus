@@ -1,5 +1,5 @@
-test: multi_cluster_management
 test: multi_test_helpers multi_test_helpers_superuser multi_create_fdw
+test: multi_cluster_management
 test: multi_test_catalog_views
 
 # ----------
@@ -97,6 +97,7 @@ test: alter_table_set_access_method
 test: alter_distributed_table
 test: issue_5248
 test: object_propagation_debug
+test: replicated_table_disable_node
 
 
 # ---------
