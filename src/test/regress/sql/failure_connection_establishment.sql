@@ -129,6 +129,22 @@ RESET client_min_messages;
 -- verify get_global_active_transactions works when a timeout happens on a connection
 SELECT get_global_active_transactions();
 
+-- tests
+-- kill the connection after connectivity check query is sent
+SELECT citus.mitmproxy('conn.onQuery(query="^SELECT 1$").kill()');
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+
+-- cancel the connection after connectivity check query is sent
+SELECT citus.mitmproxy('conn.onQuery(query="^SELECT 1$").cancel(' || pg_backend_pid() || ')');
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+
+-- kill the connection after connectivity check command is complete
+SELECT citus.mitmproxy('conn.onCommandComplete(command="SELECT 1").kill()');
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+
+-- cancel the connection after connectivity check command is complete
+SELECT citus.mitmproxy('conn.onCommandComplete(command="SELECT 1").cancel(' || pg_backend_pid() || ')');
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
 
 SELECT citus.mitmproxy('conn.allow()');
 SET citus.node_connection_timeout TO DEFAULT;

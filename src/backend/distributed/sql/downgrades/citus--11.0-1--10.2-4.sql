@@ -31,3 +31,11 @@ COMMENT ON FUNCTION master_append_table_to_shard(bigint, text, text, integer)
 
 GRANT ALL ON FUNCTION start_metadata_sync_to_node(text, integer) TO PUBLIC;
 GRANT ALL ON FUNCTION stop_metadata_sync_to_node(text, integer,bool) TO PUBLIC;
+
+DROP FUNCTION pg_catalog.check_connection_to_node (
+    nodename text,
+    nodeport integer,
+    username text,
+    databasename text,
+    OUT success bool
+);

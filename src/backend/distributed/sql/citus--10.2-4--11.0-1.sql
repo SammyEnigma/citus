@@ -2,6 +2,8 @@
 
 -- bump version to 11.0-1
 
+#include "udfs/check_connection_to_node/11.0-1.sql"
+
 DROP FUNCTION IF EXISTS pg_catalog.master_apply_delete_command(text);
 DROP FUNCTION pg_catalog.master_get_table_metadata(text);
 DROP FUNCTION pg_catalog.master_append_table_to_shard(bigint, text, text, integer);

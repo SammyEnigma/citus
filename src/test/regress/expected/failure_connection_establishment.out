@@ -233,6 +233,59 @@ WARNING:  connection to the remote node localhost:xxxxx failed
 ---------------------------------------------------------------------
 (0 rows)
 
+-- tests
+-- kill the connection after connectivity check query is sent
+SELECT citus.mitmproxy('conn.onQuery(query="^SELECT 1$").kill()');
+ mitmproxy
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+ success
+---------------------------------------------------------------------
+ f
+(1 row)
+
+-- cancel the connection after connectivity check query is sent
+SELECT citus.mitmproxy('conn.onQuery(query="^SELECT 1$").cancel(' || pg_backend_pid() || ')');
+ mitmproxy
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+ success
+---------------------------------------------------------------------
+ f
+(1 row)
+
+-- kill the connection after connectivity check command is complete
+SELECT citus.mitmproxy('conn.onCommandComplete(command="SELECT 1").kill()');
+ mitmproxy
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+ success
+---------------------------------------------------------------------
+ f
+(1 row)
+
+-- cancel the connection after connectivity check command is complete
+SELECT citus.mitmproxy('conn.onCommandComplete(command="SELECT 1").cancel(' || pg_backend_pid() || ')');
+ mitmproxy
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+ success
+---------------------------------------------------------------------
+ f
+(1 row)
+
 SELECT citus.mitmproxy('conn.allow()');
  mitmproxy
 ---------------------------------------------------------------------

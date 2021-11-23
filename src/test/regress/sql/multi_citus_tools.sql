@@ -4,15 +4,12 @@
 -- tests UDFs created for citus tools
 --
 
+CREATE SCHEMA tools;
+SET SEARCH_PATH TO 'tools';
 SET citus.next_shard_id TO 1240000;
 
 -- test with invalid port, prevent OS dependent warning from being displayed
 SET client_min_messages to ERROR;
--- PG 9.5 does not show context for plpgsql raise
--- message whereas PG 9.6 shows. disabling it
--- for this test only to have consistent behavior
--- b/w PG 9.6+ and PG 9.5.
-\set SHOW_CONTEXT never
 
 SELECT * FROM master_run_on_worker(ARRAY['localhost']::text[], ARRAY['666']::int[],
 								   ARRAY['select count(*) from pg_dist_shard']::text[],
@@ -257,5 +254,27 @@ UPDATE pg_dist_shard_placement SET shardstate = 3 WHERE shardid % 2 = 0;
 SELECT * FROM run_command_on_shards('check_shards', 'select 1');
 DROP TABLE check_shards CASCADE;
 
+-- test the connections to worker nodes
+SELECT check_connection_to_node('localhost', :worker_1_port);
+SELECT check_connection_to_node('localhost', :worker_2_port);
+
+-- verify that the coordinator can connect to itself
+SELECT check_connection_to_node('localhost', :master_port);
+
+-- verify that the connections are not successful for wrong port, database or user name parameters.
+SELECT check_connection_to_node('localhost', nodeport:=1234);
+SELECT check_connection_to_node('localhost', :worker_2_port, databasename:='non-existing-database');
+SELECT check_connection_to_node('localhost', :worker_2_port, username:='non-existing-user');
+
+-- verify that we can create connections only with users with login privileges.
+CREATE ROLE role_without_login WITH NOLOGIN;
+SELECT check_connection_to_node('localhost', :master_port, username:='role_without_login');
+CREATE ROLE role_with_login WITH LOGIN;
+SELECT check_connection_to_node('localhost', :master_port, username:='role_with_login');
+
+DROP ROLE role_with_login, role_without_login;
+
+DROP SCHEMA tools CASCADE;
+RESET SEARCH_PATH;
 -- set SHOW_CONTEXT back to default
 \set SHOW_CONTEXT errors

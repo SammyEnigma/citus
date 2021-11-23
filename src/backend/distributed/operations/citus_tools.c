@@ -14,6 +14,7 @@
 
 #include "access/htup_details.h"
 #include "catalog/pg_type.h"
+#include "distributed/argutils.h"
 #include "distributed/connection_management.h"
 #include "distributed/metadata_cache.h"
 #include "distributed/multi_client_executor.h"
@@ -28,9 +29,14 @@
 #include "utils/builtins.h"
 
 
+/* simple query to run on workers to check connectivity */
+#define CONNECTIVITY_CHECK_QUERY "SELECT 1"
 
+PG_FUNCTION_INFO_V1(check_connection_to_node);
 PG_FUNCTION_INFO_V1(master_run_on_worker);
 
+static bool CheckConnectionToNode(char *nodeName, int32 nodePort, const char *userName,
+								  const char *databaseName);
 static int ParseCommandParameters(FunctionCallInfo fcinfo, StringInfo **nodeNameArray,
 								  int **nodePortsArray, StringInfo **commandStringArray,
 								  bool *parallel);
@@ -51,12 +57,59 @@ static void ExecuteCommandsAndStoreResults(StringInfo *nodeNameArray,
 										   bool *statusArray,
 										   StringInfo *resultStringArray,
 										   int commandCount);
-static bool ExecuteRemoteQueryOrCommand(char *nodeName, uint32 nodePort,
-										char *queryString, StringInfo queryResult);
+static bool ExecuteRemoteQueryOrCommand(char *nodeName, uint32 nodePort, const char *user,
+										const char *database, char *queryString,
+										StringInfo queryResultString,
+										bool forceNewConnection);
 static Tuplestorestate * CreateTupleStore(TupleDesc tupleDescriptor,
 										  StringInfo *nodeNameArray, int *nodePortArray,
 										  bool *statusArray,
 										  StringInfo *resultArray, int commandCount);
+
+
+/*
+ * check_connection_to_node sends a simple query from a worker node to another
+ * node, and returns success status.
+ */
+Datum
+check_connection_to_node(PG_FUNCTION_ARGS)
+{
+	char *nodeName = PG_GETARG_TEXT_TO_CSTRING(0);
+	int32 nodePort = PG_GETARG_INT32(1);
+	char *userName = PG_GETARG_TEXT_TO_CSTRING_OR_NULL(2);
+	char *databaseName = PG_GETARG_TEXT_TO_CSTRING_OR_NULL(3);
+
+	bool success = CheckConnectionToNode(nodeName, nodePort, userName, databaseName);
+	PG_RETURN_BOOL(success);
+}
+
+
+/*
+ * CheckConnectionToNode sends a simple query from a node to another and returns success status
+ */
+static bool
+CheckConnectionToNode(char *nodeName, int32 nodePort, const char *userName,
+					  const char *databaseName)
+{
+	StringInfo queryResultString = makeStringInfo();
+	bool forceNewConnection = false;
+	bool success = false;
+
+	PG_TRY();
+	{
+		success =
+			ExecuteRemoteQueryOrCommand(nodeName, nodePort, userName, databaseName,
+										CONNECTIVITY_CHECK_QUERY, queryResultString,
+										forceNewConnection);
+	}
+	PG_CATCH();
+	{
+		success = false;
+	}
+	PG_END_TRY();
+
+	return success;
+}
 
 
 /*
@@ -475,9 +528,11 @@ ExecuteCommandsAndStoreResults(StringInfo *nodeNameArray, int *nodePortArray,
 		int32 nodePort = nodePortArray[commandIndex];
 		char *queryString = commandStringArray[commandIndex]->data;
 		StringInfo queryResultString = resultStringArray[commandIndex];
+		bool forceNewConnection = true;
 
-		bool success = ExecuteRemoteQueryOrCommand(nodeName, nodePort, queryString,
-												   queryResultString);
+		bool success =
+			ExecuteRemoteQueryOrCommand(nodeName, nodePort, NULL, NULL, queryString,
+										queryResultString, forceNewConnection);
 
 		statusArray[commandIndex] = success;
 
@@ -493,12 +548,18 @@ ExecuteCommandsAndStoreResults(StringInfo *nodeNameArray, int *nodePortArray,
  * target containing zero or one rows.
  */
 static bool
-ExecuteRemoteQueryOrCommand(char *nodeName, uint32 nodePort, char *queryString,
-							StringInfo queryResultString)
+ExecuteRemoteQueryOrCommand(char *nodeName, uint32 nodePort, const char *user,
+							const char *database, char *queryString,
+							StringInfo queryResultString, bool forceNewConnection)
 {
-	int connectionFlags = FORCE_NEW_CONNECTION;
-	MultiConnection *connection =
-		GetNodeConnection(connectionFlags, nodeName, nodePort);
+	int connectionFlags = 0;
+	if (forceNewConnection)
+	{
+		connectionFlags = FORCE_NEW_CONNECTION;
+	}
+
+	MultiConnection *connection = GetNodeUserDatabaseConnection(connectionFlags, nodeName,
+																nodePort, user, database);
 	bool raiseInterrupts = true;
 
 	if (PQstatus(connection->pgConn) != CONNECTION_OK)
@@ -520,8 +581,11 @@ ExecuteRemoteQueryOrCommand(char *nodeName, uint32 nodePort, char *queryString,
 
 	PQclear(queryResult);
 
-	/* close the connection */
-	CloseConnection(connection);
+	/* close the connection if we forced opening a new one */
+	if (forceNewConnection)
+	{
+		CloseConnection(connection);
+	}
 
 	return success;
 }
