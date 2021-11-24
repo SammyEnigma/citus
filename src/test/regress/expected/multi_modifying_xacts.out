@@ -1177,6 +1177,7 @@ SELECT create_distributed_table('numbers_hash_failure_test', 'key');
 
 -- ensure that the shard is created for this user
 \c - test_user - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt reference_failure_test_1200015
                       List of relations
  Schema |              Name              | Type  |   Owner

@@ -9,6 +9,8 @@ SET citus.shard_replication_factor TO 1;
 CREATE SCHEMA fix_idx_names;
 SET search_path TO fix_idx_names, public;
 
+SELECT stop_metadata_sync_to_node('localhost', :worker_1_port);
+
 -- NULL input should automatically return NULL since
 -- fix_partition_shard_index_names is strict
 -- same for worker_fix_partition_shard_index_names
@@ -47,7 +49,7 @@ SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' O
 -- the names are generated correctly
 -- shard id has been appended to all index names which didn't end in shard id
 -- this goes in line with Citus's way of naming indexes of shards: always append shardid to the end
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 -- this should work properly
@@ -55,7 +57,7 @@ SELECT start_metadata_sync_to_node('localhost', :worker_1_port);
 
 \c - - - :worker_1_port
 -- we have no clashes
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
@@ -101,7 +103,6 @@ SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' O
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
-SELECT stop_metadata_sync_to_node('localhost', :worker_1_port);
 
 DROP INDEX short;
 DROP TABLE yet_another_partition_table, another_partition_table_with_very_long_name;
@@ -121,7 +122,7 @@ CREATE INDEX ON dist_partitioned_table USING btree (dist_col, partition_col);
 SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
 \c - - - :worker_1_port
 -- index names end in shardid for partitions
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
@@ -151,7 +152,7 @@ SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' O
 
 \c - - - :worker_1_port
 -- index names are already correct, including inherited index for another_partition
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
@@ -175,7 +176,7 @@ SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' O
 
 \c - - - :worker_1_port
 -- we have correct names
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
@@ -193,7 +194,7 @@ SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' O
 SELECT fix_partition_shard_index_names('dist_partitioned_table'::regclass);
 
 \c - - - :worker_1_port
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
@@ -220,7 +221,7 @@ SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' O
 -- index names are correct
 -- shard id has been appended to all index names which didn't end in shard id
 -- this goes in line with Citus's way of naming indexes of shards: always append shardid to the end
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
@@ -266,7 +267,7 @@ DROP INDEX p_another_col_partition_col_idx;
 \c - - - :worker_1_port
 -- check that indexes have been renamed
 -- and that index on p has been dropped (it won't appear)
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;

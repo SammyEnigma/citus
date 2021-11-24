@@ -920,6 +920,7 @@ SELECT create_distributed_table('numbers_hash_failure_test', 'key');
 
 -- ensure that the shard is created for this user
 \c - test_user - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt reference_failure_test_1200015
 
 -- now connect with the default user,
@@ -939,8 +940,6 @@ COMMIT;
 
 BEGIN;
 COPY reference_failure_test FROM STDIN WITH (FORMAT 'csv');
-2,2
-\.
 COMMIT;
 
 -- show that no data go through the table and shard states are good
