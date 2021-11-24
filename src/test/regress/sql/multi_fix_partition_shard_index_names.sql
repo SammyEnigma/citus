@@ -57,7 +57,7 @@ SELECT start_metadata_sync_to_node('localhost', :worker_1_port);
 
 \c - - - :worker_1_port
 -- we have no clashes
-SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' AND tablename SIMILAR TO '%\_\d*' ORDER BY 1, 2;
+SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'fix_idx_names' ORDER BY 1, 2;
 
 \c - - - :master_port
 SET search_path TO fix_idx_names, public;
