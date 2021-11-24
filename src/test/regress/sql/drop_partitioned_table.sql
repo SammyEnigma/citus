@@ -5,6 +5,7 @@
 --
 
 SET citus.next_shard_id TO 720000;
+SET citus.next_placement_id TO 720000;
 SET citus.shard_count TO 4;
 SET citus.shard_replication_factor TO 1;
 CREATE SCHEMA drop_partitioned_table;
