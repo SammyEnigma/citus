@@ -57,6 +57,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
                        List of relations
  Schema |               Name                | Type  |  Owner
@@ -99,6 +100,7 @@ ORDER BY
 
 -- verify shards are dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
       List of relations
  Schema | Name | Type | Owner
@@ -151,6 +153,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
                        List of relations
  Schema |               Name                | Type  |  Owner
@@ -188,6 +191,7 @@ ORDER BY
 
 -- verify shards are dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
       List of relations
  Schema | Name | Type | Owner
@@ -237,6 +241,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
                        List of relations
  Schema |               Name                | Type  |  Owner
@@ -278,6 +283,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
                        List of relations
  Schema |               Name                | Type  |  Owner
@@ -328,6 +334,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
                        List of relations
  Schema |               Name                | Type  |  Owner
@@ -415,6 +422,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
                        List of relations
  Schema |               Name                | Type  |  Owner

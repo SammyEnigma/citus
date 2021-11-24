@@ -34,6 +34,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 \c - - - :master_port
 
@@ -59,6 +60,7 @@ ORDER BY
 
 -- verify shards are dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 \c - - - :master_port
 
@@ -85,6 +87,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 \c - - - :master_port
 
@@ -107,6 +110,7 @@ ORDER BY
 
 -- verify shards are dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 \c - - - :master_port
 
@@ -135,6 +139,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 \c - - - :master_port
 
@@ -158,6 +163,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 
 
@@ -192,6 +198,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 \c - - - :master_port
 
@@ -242,6 +249,7 @@ ORDER BY
 
 -- verify shards are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_shards_*
 DROP EVENT TRIGGER fail_drop_table;
 \c - - - :master_port
