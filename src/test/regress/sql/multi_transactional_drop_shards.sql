@@ -281,6 +281,7 @@ ORDER BY
 
 -- verify shards and sequence are not dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_serial_*
 \ds transactional_drop_serial_column2_seq
 \c - - - :master_port
@@ -307,6 +308,7 @@ ORDER BY
 
 -- verify shards and sequence are dropped
 \c - - - :worker_1_port
+SET citus.override_table_visibility TO false;
 \dt transactional_drop_serial_*
 \ds transactional_drop_serial_column2_seq
 \c - - - :master_port
