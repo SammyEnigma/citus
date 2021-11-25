@@ -1256,17 +1256,20 @@ step s3-create-table:
 step s1-commit: 
     COMMIT;
 
-step s3-create-table: <... completed>
+step s2-create-table: <... completed>
 create_distributed_table
 ---------------------------------------------------------------------
 
 (1 row)
 
-isolationtester: canceling step s2-create-table after 5 seconds
-step s2-create-table: <... completed>
-ERROR:  canceling statement due to user request
 step s2-commit:
 	COMMIT;
+
+step s3-create-table: <... completed>
+create_distributed_table
+---------------------------------------------------------------------
+
+(1 row)
 
 step s3-commit:
 	COMMIT;
