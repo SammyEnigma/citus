@@ -36,8 +36,8 @@ test: check_mx
 test: turn_mx_off
 test: multi_table_ddl
 test: multi_sequence_default
-test: turn_mx_on
 test: multi_name_lengths
+test: turn_mx_on
 test: multi_name_resolution
 test: multi_metadata_access
 test: multi_metadata_attributes
@@ -190,7 +190,7 @@ test: multi_outer_join
 test: multi_complex_count_distinct multi_select_distinct
 test: multi_modifications
 test: multi_distribution_metadata
-test: multi_generate_ddl_commands multi_prune_shard_list multi_repair_shards
+test: multi_prune_shard_list
 test: multi_upsert multi_simple_queries multi_data_types
 test: master_copy_shard_placement
 # multi_utilities cannot be run in parallel with other tests because it checks
@@ -202,11 +202,12 @@ test: multi_repartition_udt multi_repartitioned_subquery_udf multi_subtransactio
 test: multi_modifying_xacts
 test: check_mx
 test: turn_mx_off
+test: multi_generate_ddl_commands multi_repair_shards
 test: multi_create_shards
 test: multi_transaction_recovery
+test: multi_copy
 test: turn_mx_on
 
-test: turn_mx_on
 test: local_dist_join_modifications
 test: local_table_join
 test: local_dist_join_mixed
@@ -216,7 +217,7 @@ test: citus_local_dist_joins
 # multi_copy creates hash and range-partitioned tables and performs COPY
 # multi_router_planner creates hash partitioned tables.
 # ---------
-test: multi_copy fast_path_router_modify pg_dump
+test: fast_path_router_modify pg_dump
 test: multi_router_planner
 # These 2 tests have prepared statements which sometimes get invalidated by concurrent tests,
 # changing the debug output. We should not run them in parallel with others
@@ -228,6 +229,8 @@ test: multi_router_planner_fast_path
 # ----------
 test: multi_large_shardid
 
+test: check_mx
+test: turn_mx_off
 # ----------
 #  multi_size_queries tests various size commands on distributed tables
 # ----------
@@ -236,8 +239,6 @@ test: multi_size_queries
 # ----------
 # multi_drop_extension makes sure we can safely drop and recreate the extension
 # ----------
-test: check_mx
-test: turn_mx_off
 test: multi_drop_extension
 
 # ----------
@@ -310,13 +311,15 @@ test: auto_undist_citus_local
 test: check_mx
 test: turn_mx_off
 test: mx_regular_user
-test: turn_mx_on
-test: remove_coordinator
 
 # ----------
 # multi_transactional_drop_shards tests for dropping shards using connection API
 # ----------
 test: multi_transactional_drop_shards
+test: turn_mx_on
+
+
+test: remove_coordinator
 
 # ----------
 # multi_multiuser tests simple combinations of permission access and queries

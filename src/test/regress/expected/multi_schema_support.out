@@ -1225,6 +1225,7 @@ SELECT create_reference_table('schema_with_user.test_table');
 (1 row)
 
 \c - - - :master_port
+SET citus.next_shard_id TO 1197000;
 -- we do not use run_command_on_coordinator_and_workers here because when there is CASCADE, it causes deadlock
 DROP OWNED BY "test-user" CASCADE;
 NOTICE:  drop cascades to table schema_with_user.test_table
@@ -1453,3 +1454,16 @@ DROP SCHEMA "CiTUS.TEEN2" CASCADE;
 NOTICE:  drop cascades to table "CiTUS.TEEN2"."CAPITAL_TABLE"
 DROP SCHEMA bar CASCADE;
 NOTICE:  drop cascades to table bar.test
+DROP SCHEMA test_schema_support CASCADE;
+NOTICE:  drop cascades to 11 other objects
+DETAIL:  drop cascades to table test_schema_support.nation_append
+drop cascades to table test_schema_support."nation._'append"
+drop cascades to table test_schema_support.nation_append_search_path
+drop cascades to table test_schema_support.nation_hash
+drop cascades to function test_schema_support.dummyfunction2(integer)
+drop cascades to operator test_schema_support.===(integer,integer)
+drop cascades to collation test_schema_support.english
+drop cascades to table test_schema_support.nation_hash_collation
+drop cascades to table test_schema_support.nation_hash_collation_search_path
+drop cascades to type test_schema_support.new_composite_type
+drop cascades to table test_schema_support.nation_hash_composite_types
