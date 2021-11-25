@@ -311,15 +311,13 @@ test: auto_undist_citus_local
 test: check_mx
 test: turn_mx_off
 test: mx_regular_user
+test: remove_coordinator
 test: turn_mx_on
 
 # ----------
 # multi_transactional_drop_shards tests for dropping shards using connection API
 # ----------
 test: multi_transactional_drop_shards
-
-
-test: remove_coordinator
 
 # ----------
 # multi_multiuser tests simple combinations of permission access and queries
