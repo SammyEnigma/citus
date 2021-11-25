@@ -134,7 +134,5 @@ permutation "s1-add-inactive-1" "s1-begin" "s1-disable-node-1" "s2-activate-node
 // activate and disable an inactive node node from 2 transactions, should be ok
 permutation "s1-add-inactive-1" "s1-begin" "s1-activate-node-1" "s2-disable-node-1" "s1-commit" "s1-show-nodes"
 
-// activate and disable an inactive node from 2 transactions, one aborts
-permutation "s1-add-inactive-1" "s1-begin" "s1-activate-node-1" "s2-disable-node-1" "s1-abort" "s1-show-nodes"
 // disable an active node from 2 transactions, one aborts
 permutation "s1-add-node-1" "s1-begin" "s1-disable-node-1" "s2-disable-node-1" "s1-abort" "s1-show-nodes"
