@@ -3,8 +3,8 @@ Parsed test spec with 2 sessions
 starting permutation: s1-begin s1-update-node-1 s2-update-node-2 s1-commit s1-show-nodes
 nodeid|nodename |nodeport
 ---------------------------------------------------------------------
-    22|localhost|   57637
     23|localhost|   57638
+    22|localhost|   57637
 (2 rows)
 
 step s1-begin:
@@ -55,8 +55,8 @@ nodeid|nodename|nodeport
 starting permutation: s1-begin s1-update-node-1 s2-begin s2-update-node-1 s1-commit s2-abort s1-show-nodes
 nodeid|nodename |nodeport
 ---------------------------------------------------------------------
-    24|localhost|   57637
     25|localhost|   57638
+    24|localhost|   57637
 (2 rows)
 
 step s1-begin:
@@ -113,8 +113,8 @@ nodeid|nodename|nodeport
 starting permutation: s1-begin s1-update-node-1 s2-start-metadata-sync-node-2 s1-commit s2-verify-metadata
 nodeid|nodename |nodeport
 ---------------------------------------------------------------------
-    26|localhost|   57637
     27|localhost|   57638
+    26|localhost|   57637
 (2 rows)
 
 step s1-begin:

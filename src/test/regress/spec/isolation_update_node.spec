@@ -3,7 +3,7 @@ setup
     SELECT 1 FROM master_add_node('localhost', 57637);
     SELECT 1 FROM master_add_node('localhost', 57638);
 
-    SELECT nodeid, nodename, nodeport from pg_dist_node;
+    SELECT nodeid, nodename, nodeport from pg_dist_node ORDER BY 1 DESC;
 }
 
 teardown
