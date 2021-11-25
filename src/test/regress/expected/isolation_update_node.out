@@ -3,8 +3,8 @@ Parsed test spec with 2 sessions
 starting permutation: s1-begin s1-update-node-1 s2-update-node-2 s1-commit s1-show-nodes
 nodeid|nodename |nodeport
 ---------------------------------------------------------------------
-    23|localhost|   57638
-    22|localhost|   57637
+    22|localhost|   57638
+    21|localhost|   57637
 (2 rows)
 
 step s1-begin:
@@ -43,8 +43,8 @@ step s1-show-nodes:
 
 nodeid|nodename |nodeport|isactive
 ---------------------------------------------------------------------
-    22|localhost|   58637|t
-    23|localhost|   58638|t
+    21|localhost|   58637|t
+    22|localhost|   58638|t
 (2 rows)
 
 nodeid|nodename|nodeport
@@ -55,8 +55,8 @@ nodeid|nodename|nodeport
 starting permutation: s1-begin s1-update-node-1 s2-begin s2-update-node-1 s1-commit s2-abort s1-show-nodes
 nodeid|nodename |nodeport
 ---------------------------------------------------------------------
-    25|localhost|   57638
-    24|localhost|   57637
+    24|localhost|   57638
+    23|localhost|   57637
 (2 rows)
 
 step s1-begin:
@@ -101,8 +101,8 @@ step s1-show-nodes:
 
 nodeid|nodename |nodeport|isactive
 ---------------------------------------------------------------------
-    25|localhost|   57638|t
-    24|localhost|   58637|t
+    24|localhost|   57638|t
+    23|localhost|   58637|t
 (2 rows)
 
 nodeid|nodename|nodeport
@@ -113,8 +113,8 @@ nodeid|nodename|nodeport
 starting permutation: s1-begin s1-update-node-1 s2-start-metadata-sync-node-2 s1-commit s2-verify-metadata
 nodeid|nodename |nodeport
 ---------------------------------------------------------------------
-    27|localhost|   57638
-    26|localhost|   57637
+    26|localhost|   57638
+    25|localhost|   57637
 (2 rows)
 
 step s1-begin:
@@ -152,13 +152,13 @@ step s2-verify-metadata:
 
 nodeid|groupid|nodename |nodeport
 ---------------------------------------------------------------------
-    26|     26|localhost|   58637
-    27|     27|localhost|   57638
+    25|     25|localhost|   58637
+    26|     26|localhost|   57638
 (2 rows)
 
 master_run_on_worker
 ---------------------------------------------------------------------
-(localhost,57638,t,"[{""f1"": 26, ""f2"": 26, ""f3"": ""localhost"", ""f4"": 58637}, {""f1"": 27, ""f2"": 27, ""f3"": ""localhost"", ""f4"": 57638}]")
+(localhost,57638,t,"[{""f1"": 25, ""f2"": 25, ""f3"": ""localhost"", ""f4"": 58637}, {""f1"": 26, ""f2"": 26, ""f3"": ""localhost"", ""f4"": 57638}]")
 (1 row)
 
 nodeid|nodename|nodeport
@@ -169,8 +169,8 @@ nodeid|nodename|nodeport
 starting permutation: s2-create-table s1-begin s1-update-node-nonexistent s1-prepare-transaction s2-cache-prepared-statement s1-commit-prepared s2-execute-prepared s1-update-node-existent s2-drop-table
 nodeid|nodename |nodeport
 ---------------------------------------------------------------------
-    29|localhost|   57638
-    28|localhost|   57637
+    28|localhost|   57638
+    27|localhost|   57637
 (2 rows)
 
 step s2-create-table:
