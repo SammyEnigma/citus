@@ -1109,6 +1109,7 @@ SELECT * FROM new_schema.table_set_schema;
 ---------------------------------------------------------------------
 (0 rows)
 
+SET citus.next_shard_id TO 1196000;
 SET search_path to public;
 DROP SCHEMA old_schema CASCADE;
 DROP SCHEMA new_schema CASCADE;

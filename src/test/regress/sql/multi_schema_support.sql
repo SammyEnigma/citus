@@ -826,6 +826,8 @@ SELECT table_schema AS "Shards' Schema", COUNT(*) AS "Counts"
 \c - - - :master_port
 SELECT * FROM new_schema.table_set_schema;
 
+SET citus.next_shard_id TO 1196000;
+
 SET search_path to public;
 DROP SCHEMA old_schema CASCADE;
 DROP SCHEMA new_schema CASCADE;
@@ -1027,4 +1029,4 @@ DROP SCHEMA test_schema_support_join_2 CASCADE;
 DROP SCHEMA "Citus'Teen123" CASCADE;
 DROP SCHEMA "CiTUS.TEEN2" CASCADE;
 DROP SCHEMA bar CASCADE;
-DROP SCHEMA test_schema_support;
+DROP SCHEMA test_schema_support CASCADE;

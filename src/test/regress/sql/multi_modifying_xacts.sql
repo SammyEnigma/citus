@@ -982,9 +982,6 @@ ORDER BY shardid, nodeport;
 -- all failures roll back the transaction
 BEGIN;
 COPY numbers_hash_failure_test FROM STDIN WITH (FORMAT 'csv');
-1,1
-2,2
-\.
 COMMIT;
 
 -- expect none of the placements to be market invalid after commit
