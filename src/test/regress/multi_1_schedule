@@ -158,7 +158,6 @@ test: with_dml
 # ----------
 # Tests around DDL statements run on distributed tables
 # ----------
-test: multi_index_statements
 test: multi_alter_table_statements
 test: multi_alter_table_add_constraints
 
@@ -202,6 +201,7 @@ test: multi_repartition_udt multi_repartitioned_subquery_udf multi_subtransactio
 test: multi_modifying_xacts
 test: check_mx
 test: turn_mx_off
+test: multi_index_statements
 test: multi_generate_ddl_commands multi_repair_shards
 test: multi_create_shards
 test: multi_transaction_recovery
@@ -259,13 +259,13 @@ test: multi_schema_support
 # ----------
 # multi_function_evaluation tests edge-cases in master-side function pre-evaluation
 # ----------
+test: check_mx
+test: turn_mx_off
 test: multi_function_evaluation
 
 # ----------
 # multi_truncate tests truncate functionality for distributed tables
 # ----------
-test: check_mx
-test: turn_mx_off
 test: multi_truncate
 
 # ----------
@@ -311,12 +311,12 @@ test: auto_undist_citus_local
 test: check_mx
 test: turn_mx_off
 test: mx_regular_user
+test: turn_mx_on
 
 # ----------
 # multi_transactional_drop_shards tests for dropping shards using connection API
 # ----------
 test: multi_transactional_drop_shards
-test: turn_mx_on
 
 
 test: remove_coordinator
