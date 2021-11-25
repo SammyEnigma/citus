@@ -16,11 +16,13 @@ CREATE TABLE labs (
 	name text NOT NULL
 );
 
-SELECT master_create_distributed_table('researchers', 'lab_id', 'hash');
-SELECT master_create_worker_shards('researchers', 2, 2);
+SET citus.shard_replication_factor TO 2;
+SELECT create_distributed_table('researchers', 'lab_id', shard_count:=2);
 
-SELECT master_create_distributed_table('labs', 'id', 'hash');
-SELECT master_create_worker_shards('labs', 1, 1);
+SET citus.shard_replication_factor TO 1;
+SELECT create_distributed_table('labs', 'id', shard_count:=1);
+
+RESET citus.shard_replication_factor;
 
 -- might be confusing to have two people in the same lab with the same name
 CREATE UNIQUE INDEX avoid_name_confusion_idx ON researchers (lab_id, name);

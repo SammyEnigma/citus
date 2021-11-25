@@ -19,6 +19,7 @@ GRANT ALL ON SCHEMA "Mx Regular User" TO regular_mx_user;
 CREATE SCHEMA "Mx Super User";
 SELECT 1 FROM run_command_on_workers($$CREATE SCHEMA "Mx Super User";$$);
 SET citus.next_shard_id TO 2980000;
+SET citus.next_placement_id TO 2980000;
 SET search_path TO "Mx Super User";
 CREATE TABLE super_user_owned_regular_user_granted (a int PRIMARY KEY, b int);
 SELECT create_reference_table ('"Mx Super User".super_user_owned_regular_user_granted');

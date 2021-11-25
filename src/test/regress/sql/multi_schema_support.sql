@@ -130,8 +130,11 @@ CREATE TABLE test_schema_support.nation_hash(
     n_regionkey integer not null,
     n_comment varchar(152)
 );
-SELECT master_create_distributed_table('test_schema_support.nation_hash', 'n_nationkey', 'hash');
-SELECT master_create_worker_shards('test_schema_support.nation_hash', 4, 2);
+
+SET citus.shard_replication_factor TO 2;
+SELECT create_distributed_table('test_schema_support.nation_hash', 'n_nationkey', shard_count:=4);
+
+RESET citus.shard_replication_factor;
 
 
 -- test cursors
