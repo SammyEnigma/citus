@@ -166,6 +166,7 @@ SELECT create_distributed_table('table2_groupA', 'id');
 
 -- change shard replication factor
 SET citus.shard_replication_factor = 1;
+ALTER SEQUENCE pg_catalog.pg_dist_colocationid_seq RESTART 50;
 
 CREATE TABLE table1_groupB ( id int );
 SELECT create_distributed_table('table1_groupB', 'id');
