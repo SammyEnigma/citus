@@ -119,6 +119,7 @@ GRANT ALL ON SCHEMA "Mx Regular User" TO regular_mx_user;
 \c - regular_mx_user - :master_port
 SET search_path TO "Mx Regular User";
 SET citus.next_shard_id TO 1560000;
+SET citus.next_placement_id TO 1560000;
 
 -- make sure that we sync the metadata
 SET citus.shard_replication_factor TO 1;

@@ -790,6 +790,7 @@ SELECT * FROM new_schema.table_set_schema;
 
 DROP SCHEMA new_schema CASCADE;
 
+SET citus.next_shard_id TO 1195000;
 
 -- test ALTER TABLE SET SCHEMA when a search path is set
 CREATE SCHEMA old_schema;
@@ -1026,3 +1027,4 @@ DROP SCHEMA test_schema_support_join_2 CASCADE;
 DROP SCHEMA "Citus'Teen123" CASCADE;
 DROP SCHEMA "CiTUS.TEEN2" CASCADE;
 DROP SCHEMA bar CASCADE;
+DROP SCHEMA test_schema_support;

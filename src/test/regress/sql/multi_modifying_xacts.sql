@@ -962,9 +962,6 @@ ORDER BY s.logicalrelid, sp.shardstate;
 -- any failure rollbacks the transaction
 BEGIN;
 COPY numbers_hash_failure_test FROM STDIN WITH (FORMAT 'csv');
-1,1
-2,2
-\.
 ABORT;
 
 -- none of placements are invalid after abort
