@@ -517,7 +517,7 @@ SET citus.override_table_visibility TO false;
  Schema |                 Name                  |   Type   |  Owner   
 --------+---------------------------------------+----------+----------
  public | transactional_drop_serial_column2_seq | sequence | postgres
-(1 rows)
+(1 row)
 
 \c - - - :master_port
 -- test DROP TABLE(ergo citus_drop_all_shards) in transaction, then COMMIT
