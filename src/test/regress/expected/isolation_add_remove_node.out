@@ -784,22 +784,13 @@ step s1-abort:
 	ABORT;
 
 step s2-disable-node-1: <... completed>
-?column?
----------------------------------------------------------------------
-       1
-(1 row)
-
-wait_until_metadata_sync
----------------------------------------------------------------------
-
-(1 row)
-
+ERROR:  disabling localhost:xxxxx failed
 step s1-show-nodes:
 	SELECT nodename, nodeport, isactive FROM pg_dist_node ORDER BY nodename, nodeport;
 
 nodename |nodeport|isactive
 ---------------------------------------------------------------------
-localhost|   57637|f
+localhost|   57637|t
 (1 row)
 
 master_remove_node
