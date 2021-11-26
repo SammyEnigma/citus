@@ -268,11 +268,15 @@ SELECT check_connection_to_node('localhost', :worker_2_port, username:='non-exis
 
 -- verify that we can create connections only with users with login privileges.
 CREATE ROLE role_without_login WITH NOLOGIN;
-SELECT check_connection_to_node('localhost', :master_port, username:='role_without_login');
+SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_without_login WITH NOLOGIN$$);
+SELECT check_connection_to_node('localhost', :worker_1_port, username:='role_without_login');
+
 CREATE ROLE role_with_login WITH LOGIN;
-SELECT check_connection_to_node('localhost', :master_port, username:='role_with_login');
+SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_with_login WITH LOGIN$$);
+SELECT check_connection_to_node('localhost', :worker_1_port, username:='role_with_login');
 
 DROP ROLE role_with_login, role_without_login;
+SELECT 1 FROM run_command_on_workers($$DROP ROLE role_with_login, role_without_login$$);
 
 DROP SCHEMA tools CASCADE;
 RESET SEARCH_PATH;

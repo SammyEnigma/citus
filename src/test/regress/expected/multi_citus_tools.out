@@ -544,7 +544,14 @@ SELECT check_connection_to_node('localhost', :worker_2_port, username:='non-exis
 CREATE ROLE role_without_login WITH NOLOGIN;
 NOTICE:  not propagating CREATE ROLE/USER commands to worker nodes
 HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
-SELECT check_connection_to_node('localhost', :master_port, username:='role_without_login');
+SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_without_login WITH NOLOGIN$$);
+ ?column?
+---------------------------------------------------------------------
+        1
+        1
+(2 rows)
+
+SELECT check_connection_to_node('localhost', :worker_1_port, username:='role_without_login');
  check_connection_to_node
 ---------------------------------------------------------------------
  f
@@ -553,13 +560,27 @@ SELECT check_connection_to_node('localhost', :master_port, username:='role_witho
 CREATE ROLE role_with_login WITH LOGIN;
 NOTICE:  not propagating CREATE ROLE/USER commands to worker nodes
 HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
-SELECT check_connection_to_node('localhost', :master_port, username:='role_with_login');
+SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_with_login WITH LOGIN$$);
+ ?column?
+---------------------------------------------------------------------
+        1
+        1
+(2 rows)
+
+SELECT check_connection_to_node('localhost', :worker_1_port, username:='role_with_login');
  check_connection_to_node
 ---------------------------------------------------------------------
  t
 (1 row)
 
 DROP ROLE role_with_login, role_without_login;
+SELECT 1 FROM run_command_on_workers($$DROP ROLE role_with_login, role_without_login$$);
+ ?column?
+---------------------------------------------------------------------
+        1
+        1
+(2 rows)
+
 DROP SCHEMA tools CASCADE;
 RESET SEARCH_PATH;
 -- set SHOW_CONTEXT back to default
