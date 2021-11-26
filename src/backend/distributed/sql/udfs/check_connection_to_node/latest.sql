@@ -17,4 +17,4 @@ COMMENT ON FUNCTION pg_catalog.check_connection_to_node (
     databasename text,
     OUT success bool
 )
-    IS 'checks connection from worker node to another worker node';
+    IS 'checks connection another node';
