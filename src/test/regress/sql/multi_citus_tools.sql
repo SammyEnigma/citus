@@ -255,8 +255,11 @@ SELECT * FROM run_command_on_shards('check_shards', 'select 1');
 DROP TABLE check_shards CASCADE;
 
 -- test the connections to worker nodes
-SELECT check_connection_to_node('localhost', :worker_1_port);
-SELECT check_connection_to_node('localhost', :worker_2_port);
+SELECT bool_and(success) AS all_nodes_are_successful FROM (
+    SELECT check_connection_to_node(nodename, nodeport) AS success
+    FROM pg_dist_node
+    WHERE isactive = 't'
+) subquery;
 
 -- verify that the coordinator can connect to itself
 SELECT check_connection_to_node('localhost', :master_port);
