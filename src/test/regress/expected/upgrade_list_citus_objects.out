@@ -30,6 +30,7 @@ ORDER BY 1;
  function assign_distributed_transaction_id(integer,bigint,timestamp with time zone)
  function authinfo_valid(text)
  function broadcast_intermediate_result(text,text)
+ function check_connection_to_node(text,integer,text,text)
  function check_distributed_deadlocks()
  function citus_activate_node(text,integer)
  function citus_add_inactive_node(text,integer,integer,noderole,name)
@@ -258,5 +259,5 @@ ORDER BY 1;
  view citus_worker_stat_activity
  view pg_dist_shard_placement
  view time_partitions
-(242 rows)
+(243 rows)
 
