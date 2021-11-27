@@ -93,14 +93,14 @@ CheckConnectionToNode(char *nodeName, int32 nodePort, const char *userName,
 {
 	StringInfo queryResultString = makeStringInfo();
 	bool forceNewConnection = false;
-	bool success = false;
+	volatile bool success = false;
 
+	/* ExecuteRemoteQueryOrCommand may throw errors in case of connection failures. */
 	PG_TRY();
 	{
-		success =
-			ExecuteRemoteQueryOrCommand(nodeName, nodePort, userName, databaseName,
-										CONNECTIVITY_CHECK_QUERY, queryResultString,
-										forceNewConnection);
+		success = ExecuteRemoteQueryOrCommand(nodeName, nodePort, userName, databaseName,
+											  CONNECTIVITY_CHECK_QUERY, queryResultString,
+											  forceNewConnection);
 	}
 	PG_CATCH();
 	{
