@@ -559,12 +559,7 @@ ExecuteRemoteQueryOrCommand(char *nodeName, uint32 nodePort, const char *user,
 							const char *database, char *queryString,
 							StringInfo queryResultString, bool forceNewConnection)
 {
-	int connectionFlags = 0;
-	if (forceNewConnection)
-	{
-		connectionFlags = FORCE_NEW_CONNECTION;
-	}
-
+	int connectionFlags = forceNewConnection ? FORCE_NEW_CONNECTION : 0;
 	MultiConnection *connection = GetNodeUserDatabaseConnection(connectionFlags, nodeName,
 																nodePort, user, database);
 	bool raiseInterrupts = true;
