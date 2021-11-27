@@ -502,6 +502,7 @@ CONTEXT:  PL/pgSQL function run_command_on_shards(regclass,text,boolean) line XX
 
 DROP TABLE check_shards CASCADE;
 -- test the connections to worker nodes
+SET client_min_messages TO DEBUG;
 SELECT bool_and(success) AS all_nodes_are_successful FROM (
     SELECT check_connection_to_node(nodename, nodeport) AS success
     FROM pg_dist_node
@@ -521,28 +522,82 @@ SELECT check_connection_to_node('localhost', :master_port);
 
 -- verify that the connections are not successful for wrong port, database or user name parameters.
 SELECT check_connection_to_node('localhost', nodeport:=1234);
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  failed to connect to localhost:xxxxx
  check_connection_to_node
 ---------------------------------------------------------------------
  f
 (1 row)
 
 SELECT check_connection_to_node('localhost', :worker_2_port, databasename:='non-existing-database');
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  failed to connect to localhost:xxxxx
  check_connection_to_node
 ---------------------------------------------------------------------
  f
 (1 row)
 
 SELECT check_connection_to_node('localhost', :worker_2_port, username:='non-existing-user');
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  failed to connect to localhost:xxxxx
  check_connection_to_node
 ---------------------------------------------------------------------
  f
 (1 row)
 
+-- verify that the connections are not successful due to timeouts
+SET citus.node_connection_timeout TO 10;
+SELECT check_connection_to_node('www.citusdata.com');
+WARNING:  could not establish connection after 10 ms
+DEBUG:  check_connection_to_node was not successful for www.citusdata.com:5432
+DETAIL:  failed to connect to www.citusdata.com:5432
+ check_connection_to_node
+---------------------------------------------------------------------
+ f
+(1 row)
+
+RESET citus.node_connection_timeout;
+BEGIN;
+SELECT nodename, nodeport, check_connection_to_node(nodename,nodeport)
+FROM pg_dist_node
+WHERE isactive = 't'
+ORDER BY 1,2;
+ nodename  | nodeport | check_connection_to_node
+---------------------------------------------------------------------
+ localhost |    57637 | t
+ localhost |    57638 | t
+(2 rows)
+
+SELECT nodename, nodeport, check_connection_to_node(nodename,nodeport, username:='non-existing-user')
+FROM pg_dist_node
+WHERE isactive='t'
+ORDER BY 1,2;
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  failed to connect to localhost:xxxxx
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  failed to connect to localhost:xxxxx
+ nodename  | nodeport | check_connection_to_node
+---------------------------------------------------------------------
+ localhost |    57637 | f
+ localhost |    57638 | f
+(2 rows)
+
+ROLLBACK;
 -- verify that we can create connections only with users with login privileges.
 CREATE ROLE role_without_login WITH NOLOGIN;
 NOTICE:  not propagating CREATE ROLE/USER commands to worker nodes
 HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
 SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_without_login WITH NOLOGIN$$);
+DEBUG:  not propagating CREATE ROLE/USER commands to worker nodes
+HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
+DETAIL:  from localhost:xxxxx
+CONTEXT:  SQL statement "SELECT * FROM master_run_on_worker(workers, ports, commands, parallel)"
+PL/pgSQL function run_command_on_workers(text,boolean) line XX at RETURN QUERY
+DEBUG:  not propagating CREATE ROLE/USER commands to worker nodes
+HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
+DETAIL:  from localhost:xxxxx
+CONTEXT:  SQL statement "SELECT * FROM master_run_on_worker(workers, ports, commands, parallel)"
+PL/pgSQL function run_command_on_workers(text,boolean) line XX at RETURN QUERY
  ?column?
 ---------------------------------------------------------------------
         1
@@ -550,6 +605,8 @@ SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_without_login WITH NOLOG
 (2 rows)
 
 SELECT check_connection_to_node('localhost', :worker_1_port, username:='role_without_login');
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  failed to connect to localhost:xxxxx
  check_connection_to_node
 ---------------------------------------------------------------------
  f
@@ -559,6 +616,16 @@ CREATE ROLE role_with_login WITH LOGIN;
 NOTICE:  not propagating CREATE ROLE/USER commands to worker nodes
 HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
 SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_with_login WITH LOGIN$$);
+DEBUG:  not propagating CREATE ROLE/USER commands to worker nodes
+HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
+DETAIL:  from localhost:xxxxx
+CONTEXT:  SQL statement "SELECT * FROM master_run_on_worker(workers, ports, commands, parallel)"
+PL/pgSQL function run_command_on_workers(text,boolean) line XX at RETURN QUERY
+DEBUG:  not propagating CREATE ROLE/USER commands to worker nodes
+HINT:  Connect to worker nodes directly to manually create all necessary users and roles.
+DETAIL:  from localhost:xxxxx
+CONTEXT:  SQL statement "SELECT * FROM master_run_on_worker(workers, ports, commands, parallel)"
+PL/pgSQL function run_command_on_workers(text,boolean) line XX at RETURN QUERY
  ?column?
 ---------------------------------------------------------------------
         1
@@ -579,6 +646,7 @@ SELECT 1 FROM run_command_on_workers($$DROP ROLE role_with_login, role_without_l
         1
 (2 rows)
 
+RESET client_min_messages;
 DROP SCHEMA tools CASCADE;
 RESET SEARCH_PATH;
 -- set SHOW_CONTEXT back to default

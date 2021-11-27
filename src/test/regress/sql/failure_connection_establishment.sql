@@ -156,6 +156,10 @@ SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
 SELECT citus.mitmproxy('conn.onCommandComplete(command="SELECT 1").cancel(' || pg_backend_pid() || ')');
 SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
 
+-- verify that the checks are not successful when timeouts happen on a connection
+SELECT citus.mitmproxy('conn.delay(500)');
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+
 RESET client_min_messages;
 SELECT citus.mitmproxy('conn.allow()');
 SET citus.node_connection_timeout TO DEFAULT;

@@ -255,6 +255,7 @@ SELECT * FROM run_command_on_shards('check_shards', 'select 1');
 DROP TABLE check_shards CASCADE;
 
 -- test the connections to worker nodes
+SET client_min_messages TO DEBUG;
 SELECT bool_and(success) AS all_nodes_are_successful FROM (
     SELECT check_connection_to_node(nodename, nodeport) AS success
     FROM pg_dist_node
@@ -269,6 +270,23 @@ SELECT check_connection_to_node('localhost', nodeport:=1234);
 SELECT check_connection_to_node('localhost', :worker_2_port, databasename:='non-existing-database');
 SELECT check_connection_to_node('localhost', :worker_2_port, username:='non-existing-user');
 
+-- verify that the connections are not successful due to timeouts
+SET citus.node_connection_timeout TO 10;
+SELECT check_connection_to_node('www.citusdata.com');
+RESET citus.node_connection_timeout;
+
+BEGIN;
+SELECT nodename, nodeport, check_connection_to_node(nodename,nodeport)
+FROM pg_dist_node
+WHERE isactive = 't'
+ORDER BY 1,2;
+
+SELECT nodename, nodeport, check_connection_to_node(nodename,nodeport, username:='non-existing-user')
+FROM pg_dist_node
+WHERE isactive='t'
+ORDER BY 1,2;
+ROLLBACK;
+
 -- verify that we can create connections only with users with login privileges.
 CREATE ROLE role_without_login WITH NOLOGIN;
 SELECT 1 FROM run_command_on_workers($$CREATE ROLE role_without_login WITH NOLOGIN$$);
@@ -281,6 +299,7 @@ SELECT check_connection_to_node('localhost', :worker_1_port, username:='role_wit
 DROP ROLE role_with_login, role_without_login;
 SELECT 1 FROM run_command_on_workers($$DROP ROLE role_with_login, role_without_login$$);
 
+RESET client_min_messages;
 DROP SCHEMA tools CASCADE;
 RESET SEARCH_PATH;
 -- set SHOW_CONTEXT back to default
