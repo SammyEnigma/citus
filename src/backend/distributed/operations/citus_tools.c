@@ -108,6 +108,13 @@ CheckConnectionToNode(char *nodeName, int32 nodePort, const char *userName,
 	}
 	PG_END_TRY();
 
+	if (!success)
+	{
+		ereport(DEBUG1, (errmsg("check_connection_to_node was not successful for %s:%d",
+								nodeName, nodePort),
+						 errdetail("%s", queryResultString->data)));
+	}
+
 	return success;
 }
 

@@ -233,15 +233,61 @@ WARNING:  connection to the remote node localhost:xxxxx failed
 ---------------------------------------------------------------------
 (0 rows)
 
--- tests
--- kill the connection after connectivity check query is sent
-SELECT citus.mitmproxy('conn.onQuery(query="^SELECT 1$").kill()');
+-- tests for connectivity checks
+SET client_min_messages TO DEBUG1;
+-- kill the connection after authentication is ok
+SELECT citus.mitmproxy('conn.onAuthenticationOk().kill()');
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_command (command text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_result (res text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
  mitmproxy
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+WARNING:  could not establish connection after 400 ms
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  failed to connect to localhost:xxxxx
+ success
+---------------------------------------------------------------------
+ f
+(1 row)
+
+-- cancel the connection after authentication is ok
+SELECT citus.mitmproxy('conn.onAuthenticationOk().cancel(' || pg_backend_pid() || ')');
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_command (command text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_result (res text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+ mitmproxy
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:
+ success
+---------------------------------------------------------------------
+ f
+(1 row)
+
+-- kill the connection after connectivity check query is sent
+SELECT citus.mitmproxy('conn.onQuery(query="^SELECT 1$").kill()');
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_command (command text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_result (res text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+ mitmproxy
+---------------------------------------------------------------------
+
+(1 row)
+
+SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  server closed the connection unexpectedly
  success
 ---------------------------------------------------------------------
  f
@@ -249,12 +295,18 @@ SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
 
 -- cancel the connection after connectivity check query is sent
 SELECT citus.mitmproxy('conn.onQuery(query="^SELECT 1$").cancel(' || pg_backend_pid() || ')');
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_command (command text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_result (res text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
  mitmproxy
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:
  success
 ---------------------------------------------------------------------
  f
@@ -262,12 +314,18 @@ SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
 
 -- kill the connection after connectivity check command is complete
 SELECT citus.mitmproxy('conn.onCommandComplete(command="SELECT 1").kill()');
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_command (command text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_result (res text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
  mitmproxy
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:  server closed the connection unexpectedly
  success
 ---------------------------------------------------------------------
  f
@@ -275,17 +333,24 @@ SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
 
 -- cancel the connection after connectivity check command is complete
 SELECT citus.mitmproxy('conn.onCommandComplete(command="SELECT 1").cancel(' || pg_backend_pid() || ')');
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_command (command text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
+CONTEXT:  SQL statement "CREATE TEMPORARY TABLE mitmproxy_result (res text) ON COMMIT DROP"
+PL/pgSQL function citus.mitmproxy(text) line XX at SQL statement
  mitmproxy
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT * FROM check_connection_to_node('localhost', :worker_2_proxy_port);
+DEBUG:  check_connection_to_node was not successful for localhost:xxxxx
+DETAIL:
  success
 ---------------------------------------------------------------------
  f
 (1 row)
 
+RESET client_min_messages;
 SELECT citus.mitmproxy('conn.allow()');
  mitmproxy
 ---------------------------------------------------------------------
